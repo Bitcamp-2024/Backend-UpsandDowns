@@ -16,7 +16,11 @@ app.use(morgan('combined'));
 
 
 app.get('/data', (req, res) => {
-    res.send('hello there!');
+    const stock = req.query['q'] || null;
+    if (stock === null) {
+        res.send('stock not found', 404); // stock not provided
+    }
+    res.send(`stock found: ${stock}`, 200); // stock was found
 });
 
 app.listen(port, () => {
