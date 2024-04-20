@@ -11,7 +11,7 @@ const session = require("cookie-session")
 const models = require("./schemas");
 const cookieSession = require('cookie-session');
 const uniqid = require("uniqid")
-
+const yahooFinance = require('yahoo-finance2').default;
 
 moongoose.connect(process.env.MONGODB_URI).then(() => {
     console.log("Connected to MongoDB Database")
@@ -45,6 +45,34 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
             return;
         }
         res.send(`stock found: ${stock}`, 200); // stock was found
+    });
+
+    // Stock fetch endpoint
+    app.get("/stock/:id", (req, res) => {
+        const query = req.params['id'];
+        const date = new Date();
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+        if (month < 10) {
+            month = '0' + month;
+        } else {
+            month = '' + month;
+        }
+        if (day < 10) {
+            day = '0' + day;
+        } else {
+            day = '' + day;
+        }
+        
+        const queryOptions = { period1: `${date.getFullYear() - 5}-${month}-${day}` };
+        try {
+            yahooFinance.chart(query, queryOptions)
+            .then(res.json({
+                success: 'Sending data back'
+            }))
+        } catch (e) {
+            console.log(e);
+        }
     });
     
     //Signup Endpoint
