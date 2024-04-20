@@ -16,5 +16,8 @@
   "bugs": {
     "url": "https://github.com/Bitcamp-2024/Backend-UpsandDowns/issues"
   },
-  "homepage": "https://github.com/Bitcamp-2024/Backend-UpsandDowns#readme"
+  "homepage": "https://github.com/Bitcamp-2024/Backend-UpsandDowns#readme",
+  "dependencies": {
+    "express": "^4.19.2"
+  }
 }
