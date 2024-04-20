@@ -11,7 +11,9 @@ const session = require("cookie-session")
 const models = require("./schemas")
 
 
-moongoose.connect(process.env.MONGODB_URI)
+moongoose.connect(process.env.MONGODB_URI).then(() => {
+        
+})
 
 const port = 80;
 const options = {
@@ -68,7 +70,17 @@ app.post('/signup', (req, res) => {
                 })
             } else {
                 //Set up User in Database
-
+                bcrypt.genSalt(saltRounds).then((salt) => {
+                    return bcrypt.hash(req.body.password, saltRounds)
+                }).then((hashed) => {
+                    return models.User.create({
+                        name: req.body.name,
+                        username: req.body.username,
+                        hashPassword: req.body.password,
+                        joinDate: Date.now(),
+                        watchList: []
+                    })
+                }).then()
             }
         })
     }

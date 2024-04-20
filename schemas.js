@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 let UserSchema = new mongoose.Schema({
     name: String,
     username: String,
-    HashPassword: String,
-    JoinDate: Number,
+    hashPassword: String,
+    joinDate: Number,
     watchList: [{stockTicker: String, DateAdded: Number}]
 })
 
