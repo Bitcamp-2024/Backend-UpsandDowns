@@ -243,7 +243,20 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
 
     //Logout endpoint
     app.post("/logout", (req, res) => {
-        //Implement log out here
+        if(Object.keys(req.session).length === 0) { 
+            res.json({
+                message: "Not logged in",
+                redirect: "/login"
+            })
+        } else {
+            models.Session.deleteOne({sessionID: req.session.profile.sessionID}).then(function(err) {
+                req.session = null
+                res.json({
+                    message: "Logged out goodbye",
+                    redirect: "/"
+                })
+            })
+        }
     })
 
     //User endpoint
