@@ -12,6 +12,7 @@ const models = require("./schemas");
 const cookieSession = require('cookie-session');
 const uniqid = require("uniqid")
 const yahooFinance = require('yahoo-finance2').default;
+const path = require('path');
 
 moongoose.connect(process.env.MONGODB_URI).then(() => {
     console.log("Connected to MongoDB Database")
@@ -31,10 +32,11 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
     }))
     app.use(helmet());
     app.use(morgan('combined'));
+    app.use('/assets', express.static('assets'));
     
     
-    app.get('/get', (req, res) => {
-        //Send Generated Vue App here
+    app.get('/', (req, res) => {
+        res.sendFile(path.join(__dirname, 'index.html'));
     })
     
     
