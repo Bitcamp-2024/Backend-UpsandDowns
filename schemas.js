@@ -9,7 +9,9 @@ let UserSchema = new moongoose.Schema({
 })
 
 let SessionSchema = new moongoose.Schema({
-
+    username: String,
+    sessionID: String,
+    createDate: Number,
 })
 
 module.exports = {

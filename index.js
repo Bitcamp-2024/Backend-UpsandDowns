@@ -8,7 +8,9 @@ const morgan = require('morgan');
 const bcrypt = require("bcrypt")
 const saltRounds = 10
 const session = require("cookie-session")
-const models = require("./schemas")
+const models = require("./schemas");
+const cookieSession = require('cookie-session');
+const uniqid = require("uniqid")
 
 
 moongoose.connect(process.env.MONGODB_URI).then(() => {
@@ -22,6 +24,11 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
     
     app.use(cors(options));
     app.use(express.json())
+    app.use(cookieSession({
+        name: "session",
+        secret: "verysecretpassword",
+        maxAge: 24 * 60 * 60 * 60000
+    }))
     app.use(helmet());
     app.use(morgan('combined'));
     
@@ -118,7 +125,63 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                 error: "No Password provided"
             })
         } else {
+            //Check if User Already has a session
+            models.User.findOne({username: req.body.username}).exec().then((found, user) => {
+                if(!found) {
+                    res.json({
+                        errorCode: 2,
+                        error: "Username not Found"
+                    })
+                } else {
+                    bcrypt.compare(req.body.password, user.hashPassword).then((err, isCorrect) => {
 
+                        if(!isCorrect || err) {
+                            if(err) {
+                                res.json({
+                                    errorCode: 2,
+                                    error: "Something horrible happened password might be right idk"
+                                })
+                                return;
+                            }
+
+                            res.json({
+                                errorCode: 2,
+                                error: "Password is incorrect"
+                            })
+                            return;
+                        }
+
+                        models.Session.findOne({username: user.username}).exec().then((found) => {
+                            if(found) {
+                                //If session Already found for User
+                            } else {
+                                let sessionID = uniqid();
+
+                                //Create session
+                                req.session = {
+                                    name: user.name,
+                                    username: user.username,
+                                    joinDate: user.joinDate,
+                                    sessionID: sessionID
+                                }
+
+                                models.Session.create({
+                                    username: user.username,
+                                    sessionID: sessionID,
+                                    createDate: Date.now()
+                                }).then((session) => {
+            
+                                }).catch((error) => {
+                                    res.json({
+                                        erroCode: 2,
+                                        error: "Something bad happened while trying to create a session"
+                                    })
+                                })
+                            }
+                        })
+                    })
+                }
+            })
         }
     })
     
