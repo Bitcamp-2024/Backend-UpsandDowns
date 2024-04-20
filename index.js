@@ -49,6 +49,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
     
     //Signup Endpoint
     app.post('/signup', (req, res) => {
+        console.log(req.body)
         if(Object.keys(req.body).length === 0) {
             res.json({
                 errorCode: 2,
@@ -72,7 +73,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
         } else {
             //Check if Username has been taken
             models.User.findOne({username: req.body.username}).exec().then((err, user) => {
-                if(err || !user) {
+                if(err || user) {
                     if(err) {
                         res.json({
                             errorCode: 2,
@@ -92,7 +93,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                         return models.User.create({
                             name: req.body.name,
                             username: req.body.username,
-                            hashPassword: req.body.password,
+                            hashPassword: hashed,
                             joinDate: Date.now(),
                             watchList: []
                         })
@@ -133,9 +134,12 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
             })
         } else {
             //Check if User Already has a session
-            models.User.findOne({username: req.body.username}).exec().then((err, user) => {
-                if(err || !user) {
-                    if(err) {
+            console.log(req.body)
+            models.User.findOne({username: req.body.username}).exec().then((user) => {
+                console.log(user)
+
+                if(!user) {
+                    if(!user) {
                         res.json({
                             errorCode: 2,
                             error: "This is not username related"
@@ -147,17 +151,9 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                         error: "Username not Found"
                     })
                 } else {
-                    bcrypt.compare(req.body.password, user.hashPassword).then((err, isCorrect) => {
+                    bcrypt.compare(req.body.password, user.hashPassword).then((isCorrect) => {
 
-                        if(!isCorrect || err) {
-                            if(err) {
-                                res.json({
-                                    errorCode: 2,
-                                    error: "Something horrible happened password might be right idk"
-                                })
-                                return;
-                            }
-
+                        if(!isCorrect) {
                             res.json({
                                 errorCode: 2,
                                 error: "Password is incorrect"
