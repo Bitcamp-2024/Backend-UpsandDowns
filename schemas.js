@@ -1,6 +1,6 @@
-const mongoose = require("mongoose");
+const moongoose = require("mongoose");
 
-let UserSchema = new mongoose.Schema({
+let UserSchema = new moongoose.Schema({
     name: String,
     username: String,
     hashPassword: String,
