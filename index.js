@@ -49,7 +49,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
     
     //Signup Endpoint
     app.post('/signup', (req, res) => {
-        if(Object.keys(req.body) === 0) {
+        if(Object.keys(req.body).length === 0) {
             res.json({
                 errorCode: 2,
                 error: "No Username or Password Provided"
@@ -71,8 +71,15 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
             })
         } else {
             //Check if Username has been taken
-            models.User.findOne({username: req.body.username}).exec().then((found) => {
-                if(found) {
+            models.User.findOne({username: req.body.username}).exec().then((err, user) => {
+                if(err || !user) {
+                    if(err) {
+                        res.json({
+                            errorCode: 2,
+                            error: "This username may have been taken I have no clue"
+                        })
+                    }
+
                     res.json({
                         errorCode: 1,
                         error: "Username already taken"
@@ -109,7 +116,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
 
     //Login Endpoint
     app.post('/login', (req, res) => {
-        if(Object.keys(req.body) === 0) {
+        if(Object.keys(req.body).length === 0) {
             res.json({
                 errorCode: 2,
                 error: "No Username or Password Provided"
@@ -126,8 +133,15 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
             })
         } else {
             //Check if User Already has a session
-            models.User.findOne({username: req.body.username}).exec().then((found, user) => {
-                if(!found) {
+            models.User.findOne({username: req.body.username}).exec().then((err, user) => {
+                if(err || !user) {
+                    if(err) {
+                        res.json({
+                            errorCode: 2,
+                            error: "This is not username related"
+                        })
+                    }
+
                     res.json({
                         errorCode: 2,
                         error: "Username not Found"
@@ -151,32 +165,48 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                             return;
                         }
 
-                        models.Session.findOne({username: user.username}).exec().then((found) => {
-                            if(found) {
-                                //If session Already found for User
-                            } else {
-                                let sessionID = uniqid();
 
-                                //Create session
-                                req.session = {
-                                    name: user.name,
-                                    username: user.username,
-                                    joinDate: user.joinDate,
-                                    sessionID: sessionID
-                                }
-
-                                models.Session.create({
-                                    username: user.username,
-                                    sessionID: sessionID,
-                                    createDate: Date.now()
-                                }).then((session) => {
-            
-                                }).catch((error) => {
+                        //Look for session for a User
+                        models.Session.findOne({username: user.username}).exec().then((err, session) => {
+                            if(err) {
                                     res.json({
-                                        erroCode: 2,
-                                        error: "Something bad happened while trying to create a session"
+                                        errorCode: 2,
+                                        error: "Something bad happened RAA"
                                     })
-                                })
+                            } else {
+                                if(session) {
+                                    //If user already has session
+                                    res.json({
+                                        success: `session already found for user @${req.body.username}`,
+                                        redirect: "/",
+                                    })
+                                } else {
+                                    let sessionID = uniqid();
+
+                                    //Create session
+                                    req.session.profile = {
+                                        name: user.name,
+                                        username: user.username,
+                                        joinDate: user.joinDate,
+                                        sessionID: sessionID
+                                    }
+
+                                    models.Session.create({
+                                        username: user.username,
+                                        sessionID: sessionID,
+                                        createDate: Date.now()
+                                    }).then((session) => {
+                                        res.json({
+                                            success: `Login succesful user @${req.body.username}`,
+                                            redirect: "/",
+                                        })
+                                    }).catch((error) => {
+                                        res.json({
+                                            erroCode: 2,
+                                            error: "Something bad happened while trying to create a session"
+                                        })
+                                    })
+                                }
                             }
                         })
                     })
