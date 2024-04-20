@@ -273,6 +273,40 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
             })
         }
     })
+
+
+    //User watchlist update endpoint
+    app.post("/userupdate", (req, res) => {
+        if(req.session.profile) {
+            if(req.body.ticker) {
+                let watchListObject = {stockTicker: ticker, DateAdded: Date.now()}
+                models.User.findOneAndUpdate({username: req.session.profile.username}, { $push: {watchList: watchListObject} }, (err, success) => {
+                    if(err) {
+                        res.json({
+                            errorCode: 4,
+                            error: "Error while trying to add to watchlist"
+                        })
+                        return;
+                    } else {
+                        res.json({
+                            success: `Succesfully updated for ${req.session.profile.username}`,
+                            redirect: "/"
+                        })
+                    }
+                })
+            } else {
+                res.json({
+                    errorCode: 3,
+                    error: "Ticker not found"
+                })
+            }
+        } else {
+            res.json({
+                errorCode: 3,
+                error: "User not found"
+            })
+        }
+    })
     
     app.listen(port, () => {
         console.log(`HTTP Server listening on port ${port}`);
