@@ -226,7 +226,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                                         })
                                     }).catch((error) => {
                                         res.json({
-                                            erroCode: 2,
+                                            errorCode: 2,
                                             error: "Something bad happened while trying to create a session"
                                         })
                                     })
@@ -242,6 +242,21 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
     //Logout endpoint
     app.post("/logout", (req, res) => {
         //Implement log out here
+    })
+
+    //User endpoint
+    app.get("/user", (req, res) => {
+        if(req.session.profile) {
+            res.json({
+                success: `User found for ${req.session.profile.username}`,
+                body: req.session.profile
+            })
+        } else {
+            res.json({
+                errorCode: 3,
+                error: "User not found"
+            })
+        }
     })
     
     app.listen(port, () => {
