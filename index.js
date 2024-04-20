@@ -69,11 +69,15 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
         try {
             yahooFinance.chart(query, queryOptions)
             .then(response => res.json({
-                success: 'Sending data back',
+                message: 'Sending data back',
                 data: response
             }));
         } catch (e) {
             console.log(e);
+            res.json({
+                message: 'Invalid stock symbol',
+                data: null
+            })
         }
     });
     
