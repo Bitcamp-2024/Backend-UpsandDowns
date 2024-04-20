@@ -210,6 +210,10 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
             })
         }
     })
+
+    app.post("/logout", (req, res) => {
+        //Implement log out here
+    })
     
     app.listen(port, () => {
         console.log(`HTTP Server listening on port ${port}`);
