@@ -211,6 +211,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
         }
     })
 
+    //Logout endpoint
     app.post("/logout", (req, res) => {
         //Implement log out here
     })
