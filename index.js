@@ -65,13 +65,13 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
         } else {
             day = '' + day;
         }
-        
         const queryOptions = { period1: `${date.getFullYear() - 5}-${month}-${day}` };
         try {
             yahooFinance.chart(query, queryOptions)
-            .then(res.json({
-                success: 'Sending data back'
-            }))
+            .then(response => res.json({
+                success: 'Sending data back',
+                data: response
+            }));
         } catch (e) {
             console.log(e);
         }
