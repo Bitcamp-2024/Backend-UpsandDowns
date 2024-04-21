@@ -5,6 +5,7 @@ from plotly.subplots import make_subplots
 import sys
 from textblob import TextBlob
 from sklearn.model_selection import train_test_split
+import json
 
 
 def get_sentiment(ticker):
@@ -218,6 +219,8 @@ else:
 
 
 df_indicators = df[["Close", "Volume", "Open", "High", "Low", "SMA20", "SMA50", "MACD", "Signal_Line"]]
+df_indicators.index = df.index.strftime("%Y-%m-%d")
+df_indicators = df_indicators.to_dict()
 
 sentiment = get_sentiment(ticker)
 
@@ -229,11 +232,10 @@ else:
    sentiment = -1
 
 stats = get_info(ticker)
-print(ticker.info)
+
 recc = get_recommendation(ticker, stats.get("marketCap"), sentiment)
 link = f"https://logo.clearbit.com/{ticker.info.get('website')}"
 output = {"Prediction": result, "sentiment": sentiment, "stats": stats, "recommendation": recc, "logo_link": link, "df_indicators": df_indicators}
 
-
-print(output)
+json.dumps(output)
 sys.stdout.flush()
