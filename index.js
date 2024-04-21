@@ -13,6 +13,7 @@ const cookieSession = require('cookie-session');
 const uniqid = require("uniqid")
 const yahooFinance = require('yahoo-finance2').default;
 const path = require('path');
+const spawn = require("child_process").spawn;
 
 moongoose.connect(process.env.MONGODB_URI).then(() => {
     console.log("Connected to MongoDB Database")
@@ -310,6 +311,20 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                 error: "User not found"
             })
         }
+    })
+
+    //ML Endpoint
+    app.post("/runmodel", (req, res) => {
+        if(!req.body.ticker || !req.session.profile) {
+            res.json({
+                errorCode: 5,
+                error: "No ticker found or user"
+            })
+            return;
+        }
+
+        let ticker = req.body.ticker;
+        let pythonProcess = spawn("python", ["./UporDown.py", ticker])
     })
     
     app.listen(port, () => {
