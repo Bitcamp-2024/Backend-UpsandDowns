@@ -325,6 +325,13 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
 
         let ticker = req.body.ticker;
         let pythonProcess = spawn("python", ["./UporDown.py", ticker])
+
+        pythonProcess.stdout.once("data", (data) => {
+            res.json({
+                success: "Model runned",
+                body: data,
+            })
+        })
     })
     
     app.listen(port, () => {

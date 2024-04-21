@@ -75,8 +75,9 @@ def plot():
 
   # fig.show()
 
-  fig.write_html("index.html")
-  fig.write_image("figCopy.png")
+  # fig.write_html("index.html")
+  # fig.write_image("figCopy.png")
+
 plot()
 
 del df["Dividends"]
@@ -156,8 +157,17 @@ predictions = backtest(df, model, new_predictors)
 predictions["Predictions"].value_counts()
 
 if predictions["Predictions"].value_counts()[1] - predictions["Predictions"].value_counts()[0] > 40:
-  print("UP UP UP!")
+  result = ("UP UP UP!")
 elif predictions["Predictions"].value_counts()[1] - predictions["Predictions"].value_counts()[0] < -40:
-  print("Going down!")
+  result = ("Going down!")
 else:
-  print("Sideways")
+  result = ("Sideways")
+
+
+df_indicators = df[["Close", "Volume", "Open", "High", "Low", "SMA20", "SMA50", "MACD", "Signal_Line"]]
+
+output = {"Prediction": result, "df_indicators": df_indicators}
+
+
+print(output)
+sys.stdout.flush()
