@@ -344,13 +344,13 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
         }
         pythonProcess.stdout.once("data", ListnerStdout)
 
-        pythonProcess.stderr.once("data", (data) => {
-            res.json({
-                errorCode: 100,
-                error: "Idk python messed up"
-            })
-            pythonProcess.removeAllListeners('data');
-        })
+        // pythonProcess.stderr.once("data", (data) => {
+        //     res.json({
+        //         errorCode: 100,
+        //         error: "Idk python messed up"
+        //     })
+        //     pythonProcess.removeAllListeners('data');
+        // })
     })
     
     app.listen(port, () => {

@@ -168,15 +168,18 @@ def predict(train, test, predictors, model):
     combined = pd.concat([test["Target"], preds], axis=1)
     return combined
 
-def backtest(data, model, predictors, start=2500, step=250):
+def backtest(data, model, predictors, start=2000, step=250):
     all_predictions = []
-
+    if int(data.shape[0] * .1) == 0:
+      return -1
     for i in range(start, data.shape[0], step):
         train = data.iloc[0:i].copy()
         test = data.iloc[i:(i+step)].copy()
         predictions = predict(train, test, predictors, model)
         all_predictions.append(predictions)
     
+    print(all_predictions)
+    print(data.shape[0])
     return pd.concat(all_predictions)
 
 horizons = [5,8,20,250,1000]
@@ -208,6 +211,12 @@ def predict(train, test, predictors, model):
 
 predictions = backtest(df, model, new_predictors)
 
+if predictions == -1:
+   output = {"recommendation": "Erm...idk"}
+   print(json.dumps(output))
+   sys.stdout.flush()
+   exit()
+
 predictions["Predictions"].value_counts()
 
 if predictions["Predictions"].value_counts()[1] - predictions["Predictions"].value_counts()[0] > 40:
@@ -237,5 +246,5 @@ recc = get_recommendation(ticker, stats.get("marketCap"), sentiment)
 link = f"https://logo.clearbit.com/{ticker.info.get('website')}"
 output = {"Prediction": result, "sentiment": sentiment, "stats": stats, "recommendation": recc, "logo_link": link, "df_indicators": df_indicators}
 
-json.dumps(output)
+print(json.dumps(output))
 sys.stdout.flush()
