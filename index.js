@@ -328,7 +328,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
 
         pythonProcess.stdout.once("data", (data) => {
             res.json({
-                success: "Model runned",
+                success: "Model runned succesfully",
                 body: data,
             })
         })
