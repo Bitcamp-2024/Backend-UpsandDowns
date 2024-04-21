@@ -283,7 +283,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
 
     //User watchlist update endpoint
     app.post("/userupdate", (req, res) => {
-        if(req.session.profile) {
+        if(Object.keys(req.session.profile).length > 0) {
             if(req.body.ticker) {
                 let watchListObject = {stockTicker: ticker, DateAdded: Date.now()}
                 models.User.findOneAndUpdate({username: req.session.profile.username}, { $addtoset: {watchList: watchListObject} }, (err, user) => {

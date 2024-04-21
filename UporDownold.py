@@ -170,15 +170,16 @@ def predict(train, test, predictors, model):
 
 def backtest(data, model, predictors, start=2000, step=250):
     all_predictions = []
-    if int(data.shape[0] * 0.1) == 0:
-       return -1
-    
+    if int(data.shape[0] * .1) == 0:
+      return -1
     for i in range(start, data.shape[0], step):
         train = data.iloc[0:i].copy()
         test = data.iloc[i:(i+step)].copy()
         predictions = predict(train, test, predictors, model)
         all_predictions.append(predictions)
     
+    print(all_predictions)
+    print(data.shape[0])
     return pd.concat(all_predictions)
 
 horizons = [5,8,20,250,1000]
@@ -214,7 +215,7 @@ if not isinstance(predictions, pd.DataFrame) and predictions == -1:
    output = {"recommendation": "Erm...idk"}
    print(json.dumps(output))
    sys.stdout.flush()
-   exit(0)
+   exit()
 
 predictions["Predictions"].value_counts()
 
