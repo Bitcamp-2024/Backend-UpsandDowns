@@ -53,38 +53,33 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
     // Stock fetch endpoint
     app.get("/stock/:id", (req, res) => {
         const query = req.params['id'];
-        yahooFinance.quote(query, queryOptions)
-        .then(data => {
-            if (data !== undefined) {
-                const date = new Date();
-                let month = date.getMonth() + 1;
-                let day = date.getDate();
-                if (month < 10) {
-                    month = '0' + month;
-                } else {
-                    month = '' + month;
-                }
-                if (day < 10) {
-                    day = '0' + day;
-                } else {
-                    day = '' + day;
-                }
-                const queryOptions = { period1: `${date.getFullYear() - 5}-${month}-${day}` };
-                try {
-                    yahooFinance.chart(query, queryOptions)
-                    .then(response => res.json({
-                        message: 'Sending data back',
-                        data: response
-                    }));
-                } catch (e) {
-                    console.log(e);
-                    res.json({
-                        message: 'Invalid stock symbol',
-                        data: null
-                    })
-                }
-            }
-        })
+        const date = new Date();
+        let month = date.getMonth() + 1;
+        let day = date.getDate();
+        if (month < 10) {
+            month = '0' + month;
+        } else {
+            month = '' + month;
+        }
+        if (day < 10) {
+            day = '0' + day;
+        } else {
+            day = '' + day;
+        }
+        const queryOptions = { period1: `${date.getFullYear() - 5}-${month}-${day}` };
+        try {
+            yahooFinance.chart(query, queryOptions)
+            .then(response => res.json({
+                message: 'Sending data back',
+                data: response
+            }));
+        } catch (e) {
+            console.log(e);
+            res.json({
+                message: 'Invalid stock symbol',
+                data: null
+            })
+        }
     });
     
     //Signup Endpoint
