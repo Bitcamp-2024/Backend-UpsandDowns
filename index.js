@@ -341,11 +341,20 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
         let ticker = req.body.ticker;
         let pythonProcess = spawn("python", ["./UporDown.py", ticker])
 
-        pythonProcess.stdout.once("data", (data) => {
+        let ListnerStdout = (data) => {
             res.json({
                 success: "Model runned succesfully",
                 body: data.toString(),
             })
+        }
+        pythonProcess.stdout.once("data", ListnerStdout)
+
+        pythonProcess.stderr.once("data", (data) => {
+            res.json({
+                errorCode: 100,
+                error: "Idk python messed up"
+            })
+            pythonProcess.removeAllListeners('data');
         })
     })
     
