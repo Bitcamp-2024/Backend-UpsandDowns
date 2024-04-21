@@ -291,7 +291,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
         if(req.session.profile) {
             if(req.body.ticker) {
                 let watchListObject = {stockTicker: ticker, DateAdded: Date.now()}
-                models.User.findOneAndUpdate({username: req.session.profile.username}, { $push: {watchList: watchListObject} }, (err, user) => {
+                models.User.findOneAndUpdate({username: req.session.profile.username}, { $addtoset: {watchList: watchListObject} }, (err, user) => {
                     if(err) {
                         res.json({
                             errorCode: 4,
@@ -307,7 +307,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                             sessionID: old.sessionID,
                             watchList: [],
                         }
-                        
+
                         res.json({
                             success: `Succesfully updated for ${req.session.profile.username}`,
                             redirect: "/"
