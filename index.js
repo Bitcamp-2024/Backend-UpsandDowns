@@ -320,7 +320,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
 
     //ML Endpoint
     app.post("/runmodel", (req, res) => {
-        if(!req.body.ticker || !req.session.profile) {
+        if(!req.body.ticker /* ||  !req.session.profile */) {
             res.json({
                 errorCode: 5,
                 error: "No ticker found or user"
@@ -333,8 +333,8 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
 
         pythonProcess.stdout.once("data", (data) => {
             res.json({
-                success: "Model runned",
-                body: data,
+                success: "Model runned succesfully",
+                body: data.toString(),
             })
         })
     })

@@ -3,12 +3,46 @@ import pandas as pd
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import sys
+from textblob import TextBlob
+
+
+def get_sentiment(name):
+    name = name.lower()
+    ticker = yf.Ticker(name)
+
+    long_name = ticker.info.get('longName').lower().split()[0]
+
+    news = ticker.news
+
+    sum = 0
+    num_news = 1
+    for article in news:
+        title = article.get("title").lower()
+        if (name in title) or (long_name in title):
+            sum += TextBlob(title).sentiment.polarity
+            num_news += 1
+
+    return sum/num_news
+
+
+def get_info(name):
+    ticker = yf.Ticker(name)
+    info = ticker.info
+
+    data = {"forwardEps": info.get('forwardEps'), 
+            "marketCap": info.get('marketCap'), 
+            "trailingPE": info.get('trailingPE'), 
+            "recommendationKey": info.get('recommendationKey')}
+    return data
+
+
+
 
 arguements = sys.argv
-ticker = arguements[1]
+name = arguements[1]
 
-df = yf.Ticker(ticker)
-df = df.history(period="15y")
+ticker = yf.Ticker(name)
+df = ticker.history(period="14y")
 
 df.index = pd.to_datetime(df.index)
 
@@ -78,7 +112,7 @@ def plot():
   # fig.write_html("index.html")
   # fig.write_image("figCopy.png")
 
-plot()
+# plot()
 
 del df["Dividends"]
 del df["Stock Splits"]
@@ -166,7 +200,18 @@ else:
 
 df_indicators = df[["Close", "Volume", "Open", "High", "Low", "SMA20", "SMA50", "MACD", "Signal_Line"]]
 
-output = {"Prediction": result, "df_indicators": df_indicators}
+sentiment = get_sentiment(name)
+
+if sentiment == 0:
+  sentiment = 0
+elif sentiment > 0.1:
+  sentiment = 1
+else:
+   sentiment = -1
+
+stats = get_info(name)
+
+output = {"Prediction": result, "sentiment": sentiment, "stats": stats, "df_indicators": df_indicators}
 
 
 print(output)
