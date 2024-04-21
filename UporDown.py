@@ -4,12 +4,11 @@ import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 import sys
 from textblob import TextBlob
+from sklearn.model_selection import train_test_split
 
 
-def get_sentiment(name):
-    name = name.lower()
-    ticker = yf.Ticker(name)
-
+def get_sentiment(ticker):
+    name = ticker.info.get('symbol').lower()
     long_name = ticker.info.get('longName').lower().split()[0]
 
     news = ticker.news
@@ -25,16 +24,36 @@ def get_sentiment(name):
     return sum/num_news
 
 
-def get_info(name):
-    ticker = yf.Ticker(name)
+def get_info(ticker):
     info = ticker.info
 
     data = {"forwardEps": info.get('forwardEps'), 
             "marketCap": info.get('marketCap'), 
             "trailingPE": info.get('trailingPE'), 
-            "recommendationKey": info.get('recommendationKey')}
+            "yfRecommendation": info.get('recommendationKey')}
     return data
 
+
+def get_recommendation(ticker, mCap, sentiment):
+    data = pd.read_csv('data.csv', index_col=0)
+
+    X = data[['epsGrowth', 'marketCap', 'sentiment']]
+    # y: target variable (recommendation)
+    y = data['recommendation']
+
+    # Splitting the data into training and testing sets
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Creating the random forest classifier
+    rf_classifier = RandomForestClassifier(n_estimators=100, random_state=42)
+
+    # Training the classifier
+    rf_classifier.fit(X_train, y_train)
+
+    eps_growth = (ticker.info.get('forwardEps') - ticker.info.get('trailingEps'))/ticker.info.get('trailingEps')
+    new_row = pd.DataFrame({'epsGrowth': eps_growth, 'marketCap': mCap, 'sentiment': sentiment}, index=[501])
+    
+    return rf_classifier.predict(new_row)[0]
 
 
 
@@ -200,7 +219,7 @@ else:
 
 df_indicators = df[["Close", "Volume", "Open", "High", "Low", "SMA20", "SMA50", "MACD", "Signal_Line"]]
 
-sentiment = get_sentiment(name)
+sentiment = get_sentiment(ticker)
 
 if sentiment == 0:
   sentiment = 0
@@ -209,9 +228,11 @@ elif sentiment > 0.1:
 else:
    sentiment = -1
 
-stats = get_info(name)
-
-output = {"Prediction": result, "sentiment": sentiment, "stats": stats, "df_indicators": df_indicators}
+stats = get_info(ticker)
+print(ticker.info)
+recc = get_recommendation(ticker, stats.get("marketCap"), sentiment)
+link = f"https://logo.clearbit.com/{ticker.info.get('website')}"
+output = {"Prediction": result, "sentiment": sentiment, "stats": stats, "recommendation": recc, "logo_link": link, "df_indicators": df_indicators}
 
 
 print(output)
