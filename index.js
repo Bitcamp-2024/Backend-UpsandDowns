@@ -67,19 +67,18 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
             day = '' + day;
         }
         const queryOptions = { period1: `${date.getFullYear() - 5}-${month}-${day}` };
-        try {
-            yahooFinance.chart(query, queryOptions)
-            .then(response => res.json({
-                message: 'Sending data back',
-                data: response
-            }));
-        } catch (e) {
-            console.log(e);
+        Promise.resolve(yahooFinance.chart(query, queryOptions))
+        .then(response => res.json({
+            message: 'Sending data back',
+            data: response
+        }))
+        .catch(_e => {
             res.json({
                 message: 'Invalid stock symbol',
+                error: true,
                 data: null
             })
-        }
+        });
     });
     
     //Signup Endpoint
@@ -112,7 +111,7 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                     if(err) {
                         res.json({
                             errorCode: 2,
-                            error: "This username may have been taken I have no clue"
+                            error: "Username already taken"
                         })
                     }
 
@@ -174,13 +173,6 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                 console.log(user)
 
                 if(!user) {
-                    if(!user) {
-                        res.json({
-                            errorCode: 2,
-                            error: "This is not username related"
-                        })
-                    }
-
                     res.json({
                         errorCode: 2,
                         error: "Username not Found"
@@ -282,33 +274,50 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
 
 
     //User watchlist update endpoint
-    app.post("/userupdate", (req, res) => {
+    app.post("/userupdate", async (req, res) => {
         if(Object.keys(req.session.profile).length > 0) {
             if(req.body.ticker) {
-                let watchListObject = {stockTicker: ticker, DateAdded: Date.now()}
-                models.User.findOneAndUpdate({username: req.session.profile.username}, { $addtoset: {watchList: watchListObject} }, (err, user) => {
-                    if(err) {
+                try {
+                    let watchListObject = {stockTicker: req.body.ticker, DateAdded: Date.now()}
+                    const user = await models.User.findOne({ username: req.session.profile.username });
+                    if (!user) {
                         res.json({
                             errorCode: 4,
-                            error: "Error while trying to add to watchlist"
+                            error: "User not found"
                         })
                         return;
-                    } else {
-                        let old = req.session.profile
-                        req.session.profile = {
-                            name: user.name,
-                            username: user.username,
-                            joinDate: user.joinDate,
-                            sessionID: old.sessionID,
-                            watchList: [],
-                        }
-
-                        res.json({
-                            success: `Succesfully updated for ${req.session.profile.username}`,
-                            redirect: "/"
-                        })
                     }
-                })
+                    if (user.watchList.some(item => item.stockTicker === watchListObject.stockTicker)) {
+                        res.json({
+                            errorCode: 5,
+                            error: "Item with this ticker symbol already in watch list"
+                        });
+                        return;
+                    }
+                    const updatedUser = await models.User.findOneAndUpdate(
+                        { username: req.session.profile.username },
+                        { $addToSet: { watchList: watchListObject } },
+                        { new: true } // This option returns the updated document
+                    );
+                    let old = req.session.profile
+                    req.session.profile = {
+                        name: updatedUser.name,
+                        username: updatedUser.username,
+                        joinDate: updatedUser.joinDate,
+                        sessionID: old.sessionID,
+                        watchList: updatedUser.watchList,
+                    }
+                    res.json({
+                        success: `Succesfully updated for ${req.session.profile.username}`,
+                        redirect: "/"
+                    });
+                } catch (e) {
+                    res.json({
+                        errorCode: 4,
+                        error: "Error while trying to add to watchlist"
+                    })
+                    return;
+                }
             } else {
                 res.json({
                     errorCode: 3,
@@ -333,16 +342,25 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
             return;
         }
 
-        let ticker = req.body.ticker;
-        let pythonProcess = spawn("python", ["./UporDown.py", ticker])
+        try {
 
-        let ListnerStdout = (data) => {
+            let ticker = req.body.ticker;
+            let pythonProcess = spawn("python", ["./UporDown.py", ticker])
+
+            let ListnerStdout = (data) => {
+                res.json({
+                    success: "Model runned succesfully",
+                    body: data.toString(),
+                })
+            }
+            pythonProcess.stdout.once("data", ListnerStdout)
+
+        } catch (e) {
             res.json({
-                success: "Model runned succesfully",
-                body: data.toString(),
-            })
+                errorCode: 100,
+                message : 'Model failed. Please try again later.'
+            });
         }
-        pythonProcess.stdout.once("data", ListnerStdout)
 
         // pythonProcess.stderr.once("data", (data) => {
         //     res.json({
