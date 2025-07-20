@@ -5,6 +5,7 @@ from plotly.subplots import make_subplots
 import sys
 from textblob import TextBlob
 from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
 import json
 
 
@@ -17,7 +18,7 @@ def get_sentiment(ticker):
     sum = 0
     num_news = 1
     for article in news:
-        title = article.get("title").lower()
+        title = article.get("title", "No Title").lower()
         if (name in title) or (long_name in title):
             sum += TextBlob(title).sentiment.polarity
             num_news += 1
@@ -142,8 +143,6 @@ df["Tomorrow"] = df["Close"].shift(-1)
 df["Target"] = (df["Tomorrow"] > df["Close"]).astype(int)
 
 df = df.loc["2005-01-01":].copy()
-
-from sklearn.ensemble import RandomForestClassifier
 
 model = RandomForestClassifier(n_estimators=5, min_samples_split=100, random_state=1)
 

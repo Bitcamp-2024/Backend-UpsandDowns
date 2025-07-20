@@ -18,7 +18,7 @@ const spawn = require("child_process").spawn;
 moongoose.connect(process.env.MONGODB_URI).then(() => {
     console.log("Connected to MongoDB Database")
 
-    const port = 80;
+    const port = 3000;
     const options = {
         origin: '*',
         methods: ['GET', 'POST', 'DELETE']
@@ -346,14 +346,18 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
 
             let ticker = req.body.ticker;
             let pythonProcess = spawn("python", ["./UporDown.py", ticker])
+            let dataToSend = '';
 
-            let ListnerStdout = (data) => {
+            pythonProcess.stdout.on('data', (data) => {
+                dataToSend += data.toString();
+            });
+
+            pythonProcess.stdout.on('end', () => {
                 res.json({
                     success: "Model runned succesfully",
-                    body: data.toString(),
+                    body: dataToSend,
                 })
-            }
-            pythonProcess.stdout.once("data", ListnerStdout)
+            });
 
         } catch (e) {
             res.json({
@@ -361,14 +365,6 @@ moongoose.connect(process.env.MONGODB_URI).then(() => {
                 message : 'Model failed. Please try again later.'
             });
         }
-
-        // pythonProcess.stderr.once("data", (data) => {
-        //     res.json({
-        //         errorCode: 100,
-        //         error: "Idk python messed up"
-        //     })
-        //     pythonProcess.removeAllListeners('data');
-        // })
     })
     
     app.listen(port, () => {
